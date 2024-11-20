@@ -1,0 +1,121 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Token {
+  id            String    @id @default(cuid())
+  address       String    @unique
+  symbol        String
+  name          String
+  logo          String?
+  website       String?
+  twitter       String?
+  telegram      String?
+  description   String?
+  status        TokenStatus @default(PENDING)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  votes         Vote[]
+  transactions  Transaction[]
+
+  @@index([status])
+}
+
+model Vote {
+  id        String    @id @default(cuid())
+  type      VoteType
+  tokenId   String
+  token     Token     @relation(fields: [tokenId], references: [id])
+  timestamp DateTime  @default(now())
+  
+  @@index([tokenId])
+}
+
+model Wallet {
+  id          String    @id @default(cuid())
+  address     String    @unique
+  label       String?
+  isTracked   Boolean   @default(true)
+  groupId     String?
+  group       Group?    @relation(fields: [groupId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  transactions Transaction[]
+
+  @@index([isTracked])
+}
+
+model Group {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  wallets     Wallet[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Transaction {
+  id          String    @id @default(cuid())
+  hash        String    @unique
+  type        TxType
+  tokenId     String
+  token       Token     @relation(fields: [tokenId], references: [id])
+  walletId    String
+  wallet      Wallet    @relation(fields: [walletId], references: [id])
+  amount      Float
+  price       Float
+  timestamp   DateTime
+
+  @@index([walletId])
+  @@index([tokenId])
+}
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String    // Hashed
+  role        UserRole  @default(USER)
+  isActive    Boolean   @default(true)
+  lastLogin   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  settings    Json?     // User preferences
+}
+
+model Settings {
+  id                  Int      @id @default(1)
+  votingEnabled       Boolean  @default(true)
+  submissionsEnabled  Boolean  @default(true)
+  minVotesForTrending Int      @default(10)
+  automatedVerification Boolean @default(false)
+  notificationSettings Json    // Platform-wide notification settings
+  updatedAt          DateTime @updatedAt
+}
+
+enum TokenStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
+enum VoteType {
+  BULLISH
+  BEARISH
+}
+
+enum TxType {
+  BUY
+  SELL
+}
+
+enum UserRole {
+  ADMIN
+  MODERATOR
+  USER
+}

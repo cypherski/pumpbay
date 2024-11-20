@@ -1,0 +1,27 @@
+// src/styles/globals.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0f172a;
+  --surface: #1e293b;
+  --primary: #0ea5e9;
+}
+
+body {
+  background-color: var(--background);
+  color: white;
+}
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .container {
+    @apply px-4 mx-auto max-w-7xl;
+  }
+}
